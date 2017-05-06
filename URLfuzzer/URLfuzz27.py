@@ -36,18 +36,23 @@ def buildRequest(url):
     global payloads
     f = furl(url)
     params = f.args
-    if len(params) != 0:
-        for payload in payloads:
-            for param in params.keys():
-                f.args[param] = payload.strip()
-                Request(f.url.strip())
-                f = furl(url)
+    for payload in payloads:
+        for param in params.keys():
+            f.args[param] = payload.strip()
+            Request(f.url.strip())
+            f = furl(url)
 
 #start threads for all requests
 with open(sys.argv[1],'r') as f:
     urls = f.readlines()
+    reqList = []
     for u in urls:
-        #use ? to identify urls with parameters
-        if '?' in u:
-            t = threading.Thread(target=buildRequest,args=(u,))
-t.start()
+        #check if URL has parameters and only start threads on unique URLs
+        f = furl(u)
+        if len(f.args) != 0:
+            for p in f.args.keys():
+                f.args[p] = ''
+            if f.url not in reqList:
+                reqList.append(f.url)
+                t = threading.Thread(target=buildRequest,args=(u,))
+                t.start()
